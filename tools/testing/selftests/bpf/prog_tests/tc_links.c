@@ -7,24 +7,30 @@
 
 #define loopback 1
 #define ping_cmd "ping -q -c1 -w1 127.0.0.1 > /dev/null"
+#define NS_NAME "ns-tc-link-"
 
 #include "test_tc_link.skel.h"
 
 #include "netlink_helpers.h"
 #include "tc_helpers.h"
 
-void serial_test_tc_links_basic(void)
+void test_tc_links_basic(void)
 {
 	LIBBPF_OPTS(bpf_prog_query_opts, optq);
 	LIBBPF_OPTS(bpf_tcx_opts, optl);
 	__u32 prog_ids[2], link_ids[2];
 	__u32 pid1, pid2, lid1, lid2;
+	struct netns_obj *ns = NULL;
 	struct test_tc_link *skel;
 	struct bpf_link *link;
 	int err;
 
 	skel = test_tc_link__open_and_load();
 	if (!ASSERT_OK_PTR(skel, "skel_load"))
+		goto cleanup;
+
+	ns = create_tid_ns(NS_NAME);
+	if (!ns)
 		goto cleanup;
 
 	pid1 = id_from_prog_fd(bpf_program__fd(skel->progs.tc1));
@@ -110,6 +116,7 @@ cleanup:
 
 	assert_mprog_count(BPF_TCX_INGRESS, 0);
 	assert_mprog_count(BPF_TCX_EGRESS, 0);
+	netns_free(ns);
 }
 
 static void test_tc_links_before_target(int target)
@@ -260,10 +267,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_before(void)
+void test_tc_links_before(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_links_before_target(BPF_TCX_INGRESS);
 	test_tc_links_before_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_links_after_target(int target)
@@ -414,10 +428,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_after(void)
+void test_tc_links_after(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_links_after_target(BPF_TCX_INGRESS);
 	test_tc_links_after_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_links_revision_target(int target)
@@ -514,10 +535,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_revision(void)
+void test_tc_links_revision(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_links_revision_target(BPF_TCX_INGRESS);
 	test_tc_links_revision_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_chain_classic(int target, bool chain_tc_old)
@@ -618,12 +646,19 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_chain_classic(void)
+void test_tc_links_chain_classic(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_chain_classic(BPF_TCX_INGRESS, false);
 	test_tc_chain_classic(BPF_TCX_EGRESS, false);
 	test_tc_chain_classic(BPF_TCX_INGRESS, true);
 	test_tc_chain_classic(BPF_TCX_EGRESS, true);
+
+	netns_free(ns);
 }
 
 static void test_tc_links_replace_target(int target)
@@ -846,10 +881,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_replace(void)
+void test_tc_links_replace(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_links_replace_target(BPF_TCX_INGRESS);
 	test_tc_links_replace_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_links_invalid_target(int target)
@@ -1158,10 +1200,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_invalid(void)
+void test_tc_links_invalid(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_links_invalid_target(BPF_TCX_INGRESS);
 	test_tc_links_invalid_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_links_prepend_target(int target)
@@ -1314,10 +1363,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_prepend(void)
+void test_tc_links_prepend(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_links_prepend_target(BPF_TCX_INGRESS);
 	test_tc_links_prepend_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_links_append_target(int target)
@@ -1470,10 +1526,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_append(void)
+void test_tc_links_append(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_links_append_target(BPF_TCX_INGRESS);
 	test_tc_links_append_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_links_dev_cleanup_target(int target)
@@ -1568,10 +1631,17 @@ cleanup:
 	ASSERT_EQ(if_nametoindex("tcx_opts2"), 0, "dev2_removed");
 }
 
-void serial_test_tc_links_dev_cleanup(void)
+void test_tc_links_dev_cleanup(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_links_dev_cleanup_target(BPF_TCX_INGRESS);
 	test_tc_links_dev_cleanup_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_chain_mixed(int target)
@@ -1672,13 +1742,20 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_links_chain_mixed(void)
+void test_tc_links_chain_mixed(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_chain_mixed(BPF_TCX_INGRESS);
 	test_tc_chain_mixed(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
-static void test_tc_links_ingress(int target, bool chain_tc_old,
+static void tc_links_ingress(int target, bool chain_tc_old,
 				  bool tcx_teardown_first)
 {
 	LIBBPF_OPTS(bpf_tc_opts, tc_opts,
@@ -1782,11 +1859,18 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_links_ingress(void)
+void test_tc_links_ingress(void)
 {
-	test_tc_links_ingress(BPF_TCX_INGRESS, true, true);
-	test_tc_links_ingress(BPF_TCX_INGRESS, true, false);
-	test_tc_links_ingress(BPF_TCX_INGRESS, false, false);
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
+	tc_links_ingress(BPF_TCX_INGRESS, true, true);
+	tc_links_ingress(BPF_TCX_INGRESS, true, false);
+	tc_links_ingress(BPF_TCX_INGRESS, false, false);
+
+	netns_free(ns);
 }
 
 struct qdisc_req {
@@ -1823,9 +1907,13 @@ static int qdisc_replace(int ifindex, const char *kind, bool block)
 	return err;
 }
 
-void serial_test_tc_links_dev_chain0(void)
+void test_tc_links_dev_chain0(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
 	int err, ifindex;
+
+	if (!ns)
+		goto cleanup;
 
 	ASSERT_OK(system("ip link add dev foo type veth peer name bar"), "add veth");
 	ifindex = if_nametoindex("foo");
@@ -1846,9 +1934,10 @@ cleanup:
 	ASSERT_OK(system("ip link del dev foo"), "del veth");
 	ASSERT_EQ(if_nametoindex("foo"), 0, "foo removed");
 	ASSERT_EQ(if_nametoindex("bar"), 0, "bar removed");
+	netns_free(ns);
 }
 
-static void test_tc_links_dev_mixed(int target)
+static void tc_links_dev_mixed(int target)
 {
 	LIBBPF_OPTS(bpf_tc_opts, tc_opts, .handle = 1, .priority = 1);
 	LIBBPF_OPTS(bpf_tc_hook, tc_hook);
@@ -1955,8 +2044,15 @@ cleanup:
 	ASSERT_EQ(if_nametoindex("tcx_opts2"), 0, "dev2_removed");
 }
 
-void serial_test_tc_links_dev_mixed(void)
+void test_tc_links_dev_mixed(void)
 {
-	test_tc_links_dev_mixed(BPF_TCX_INGRESS);
-	test_tc_links_dev_mixed(BPF_TCX_EGRESS);
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
+	tc_links_dev_mixed(BPF_TCX_INGRESS);
+	tc_links_dev_mixed(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }

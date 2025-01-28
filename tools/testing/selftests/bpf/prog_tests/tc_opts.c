@@ -6,15 +6,17 @@
 
 #define loopback 1
 #define ping_cmd "ping -q -c1 -w1 127.0.0.1 > /dev/null"
+#define NS_NAME "tc-opts-"
 
 #include "test_tc_link.skel.h"
 #include "tc_helpers.h"
 
-void serial_test_tc_opts_basic(void)
+void test_tc_opts_basic(void)
 {
 	LIBBPF_OPTS(bpf_prog_attach_opts, opta);
 	LIBBPF_OPTS(bpf_prog_detach_opts, optd);
 	LIBBPF_OPTS(bpf_prog_query_opts, optq);
+	struct netns_obj *ns = NULL;
 	__u32 fd1, fd2, id1, id2;
 	struct test_tc_link *skel;
 	__u32 prog_ids[2];
@@ -22,6 +24,10 @@ void serial_test_tc_opts_basic(void)
 
 	skel = test_tc_link__open_and_load();
 	if (!ASSERT_OK_PTR(skel, "skel_load"))
+		goto cleanup;
+
+	ns = create_tid_ns(NS_NAME);
+	if (!ns)
 		goto cleanup;
 
 	fd1 = bpf_program__fd(skel->progs.tc1);
@@ -106,6 +112,7 @@ cleanup_in:
 
 cleanup:
 	test_tc_link__destroy(skel);
+	netns_free(ns);
 }
 
 static void test_tc_opts_before_target(int target)
@@ -254,10 +261,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_before(void)
+void test_tc_opts_before(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_before_target(BPF_TCX_INGRESS);
 	test_tc_opts_before_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_after_target(int target)
@@ -445,10 +459,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_after(void)
+void test_tc_opts_after(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_after_target(BPF_TCX_INGRESS);
 	test_tc_opts_after_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_revision_target(int target)
@@ -554,10 +575,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_revision(void)
+void test_tc_opts_revision(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_revision_target(BPF_TCX_INGRESS);
 	test_tc_opts_revision_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_chain_classic(int target, bool chain_tc_old)
@@ -655,12 +683,19 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_opts_chain_classic(void)
+void test_tc_opts_chain_classic(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_chain_classic(BPF_TCX_INGRESS, false);
 	test_tc_chain_classic(BPF_TCX_EGRESS, false);
 	test_tc_chain_classic(BPF_TCX_INGRESS, true);
 	test_tc_chain_classic(BPF_TCX_EGRESS, true);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_replace_target(int target)
@@ -864,10 +899,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_replace(void)
+void test_tc_opts_replace(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_replace_target(BPF_TCX_INGRESS);
 	test_tc_opts_replace_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_invalid_target(int target)
@@ -1017,10 +1059,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_invalid(void)
+void test_tc_opts_invalid(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_invalid_target(BPF_TCX_INGRESS);
 	test_tc_opts_invalid_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_prepend_target(int target)
@@ -1157,10 +1206,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_prepend(void)
+void test_tc_opts_prepend(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_prepend_target(BPF_TCX_INGRESS);
 	test_tc_opts_prepend_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_append_target(int target)
@@ -1297,10 +1353,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_append(void)
+void test_tc_opts_append(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_append_target(BPF_TCX_INGRESS);
 	test_tc_opts_append_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_dev_cleanup_target(int target)
@@ -1387,10 +1450,17 @@ cleanup:
 	ASSERT_EQ(if_nametoindex("tcx_opts2"), 0, "dev2_removed");
 }
 
-void serial_test_tc_opts_dev_cleanup(void)
+void test_tc_opts_dev_cleanup(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_dev_cleanup_target(BPF_TCX_INGRESS);
 	test_tc_opts_dev_cleanup_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_mixed_target(int target)
@@ -1563,10 +1633,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_opts_mixed(void)
+void test_tc_opts_mixed(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_mixed_target(BPF_TCX_INGRESS);
 	test_tc_opts_mixed_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_demixed_target(int target)
@@ -1642,10 +1719,17 @@ cleanup:
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_opts_demixed(void)
+void test_tc_opts_demixed(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_demixed_target(BPF_TCX_INGRESS);
 	test_tc_opts_demixed_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_detach_target(int target)
@@ -1813,10 +1897,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_detach(void)
+void test_tc_opts_detach(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_detach_target(BPF_TCX_INGRESS);
 	test_tc_opts_detach_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_detach_before_target(int target)
@@ -2020,10 +2111,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_detach_before(void)
+void test_tc_opts_detach_before(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_detach_before_target(BPF_TCX_INGRESS);
 	test_tc_opts_detach_before_target(BPF_TCX_EGRESS);
+	
+	netns_free(ns);
 }
 
 static void test_tc_opts_detach_after_target(int target)
@@ -2236,13 +2334,20 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_detach_after(void)
+void test_tc_opts_detach_after(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_detach_after_target(BPF_TCX_INGRESS);
 	test_tc_opts_detach_after_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
-static void test_tc_opts_delete_empty(int target, bool chain_tc_old)
+static void tc_opts_delete_empty(int target, bool chain_tc_old)
 {
 	LIBBPF_OPTS(bpf_tc_hook, tc_hook, .ifindex = loopback);
 	LIBBPF_OPTS(bpf_prog_detach_opts, optd);
@@ -2265,12 +2370,19 @@ static void test_tc_opts_delete_empty(int target, bool chain_tc_old)
 	assert_mprog_count(target, 0);
 }
 
-void serial_test_tc_opts_delete_empty(void)
+void test_tc_opts_delete_empty(void)
 {
-	test_tc_opts_delete_empty(BPF_TCX_INGRESS, false);
-	test_tc_opts_delete_empty(BPF_TCX_EGRESS, false);
-	test_tc_opts_delete_empty(BPF_TCX_INGRESS, true);
-	test_tc_opts_delete_empty(BPF_TCX_EGRESS, true);
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
+	tc_opts_delete_empty(BPF_TCX_INGRESS, false);
+	tc_opts_delete_empty(BPF_TCX_EGRESS, false);
+	tc_opts_delete_empty(BPF_TCX_INGRESS, true);
+	tc_opts_delete_empty(BPF_TCX_EGRESS, true);
+
+	netns_free(ns);
 }
 
 static void test_tc_chain_mixed(int target)
@@ -2372,10 +2484,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_chain_mixed(void)
+void test_tc_opts_chain_mixed(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_chain_mixed(BPF_TCX_INGRESS);
 	test_tc_chain_mixed(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static int generate_dummy_prog(void)
@@ -2446,8 +2565,13 @@ cleanup:
 	ASSERT_EQ(if_nametoindex("tcx_opts2"), 0, "dev2_removed");
 }
 
-void serial_test_tc_opts_max(void)
+void test_tc_opts_max(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_max_target(BPF_TCX_INGRESS, 0, false);
 	test_tc_opts_max_target(BPF_TCX_EGRESS, 0, false);
 
@@ -2456,6 +2580,8 @@ void serial_test_tc_opts_max(void)
 
 	test_tc_opts_max_target(BPF_TCX_INGRESS, BPF_F_AFTER, true);
 	test_tc_opts_max_target(BPF_TCX_EGRESS, BPF_F_AFTER, false);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_query_target(int target)
@@ -2748,10 +2874,17 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_query(void)
+void test_tc_opts_query(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_query_target(BPF_TCX_INGRESS);
 	test_tc_opts_query_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
 
 static void test_tc_opts_query_attach_target(int target)
@@ -2807,8 +2940,15 @@ cleanup:
 	test_tc_link__destroy(skel);
 }
 
-void serial_test_tc_opts_query_attach(void)
+void test_tc_opts_query_attach(void)
 {
+	struct netns_obj *ns = create_tid_ns(NS_NAME);
+
+	if (!ns)
+		return;
+
 	test_tc_opts_query_attach_target(BPF_TCX_INGRESS);
 	test_tc_opts_query_attach_target(BPF_TCX_EGRESS);
+
+	netns_free(ns);
 }
