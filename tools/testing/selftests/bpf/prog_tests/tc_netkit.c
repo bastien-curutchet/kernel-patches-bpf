@@ -6,6 +6,7 @@
 
 #define netkit_peer "nk0"
 #define netkit_name "nk1"
+#define NS_NAME "tc-netkit-"
 
 #define ping_addr_neigh		0x0a000002 /* 10.0.0.2 */
 #define ping_addr_noneigh	0x0a000003 /* 10.0.0.3 */
@@ -47,6 +48,7 @@ static int create_netkit(int mode, int policy, int peer_policy, int *ifindex,
 	struct iplink_req req = {};
 	struct rtattr *linkinfo, *data;
 	const char *type = "netkit";
+	char ns_name[32] = NS_NAME;
 	int err;
 
 	err = rtnl_open(&rth, 0);
@@ -81,8 +83,9 @@ static int create_netkit(int mode, int policy, int peer_policy, int *ifindex,
 	rtnl_close(&rth);
 	*ifindex = if_nametoindex(netkit_name);
 
+	ASSERT_OK(append_tid(ns_name, strlen(ns_name)), "build ns-name");
 	ASSERT_GT(*ifindex, 0, "retrieve_ifindex");
-	ASSERT_OK(SYS_NOFAIL("ip netns add foo"), "create netns");
+	ASSERT_OK(SYS_NOFAIL("ip netns add %s", ns_name), "create netns");
 	ASSERT_OK(SYS_NOFAIL("ip link set dev " netkit_name " up"),
 			 "up primary");
 	ASSERT_OK(SYS_NOFAIL("ip addr add dev " netkit_name " 10.0.0.1/24"),
@@ -99,10 +102,10 @@ static int create_netkit(int mode, int policy, int peer_policy, int *ifindex,
 		ASSERT_OK(SYS_NOFAIL("ip link set dev %s up", netkit_peer), "up peer");
 		ASSERT_OK(SYS_NOFAIL("ip addr add dev %s 10.0.0.2/24", netkit_peer), "addr peer");
 	} else {
-		ASSERT_OK(SYS_NOFAIL("ip link set %s netns foo", netkit_peer), "move peer");
-		ASSERT_OK(SYS_NOFAIL("ip netns exec foo ip link set dev %s up", netkit_peer),
+		ASSERT_OK(SYS_NOFAIL("ip link set %s netns %s", netkit_peer, ns_name), "move peer");
+		ASSERT_OK(SYS_NOFAIL("ip netns exec %s ip link set dev %s up", ns_name, netkit_peer),
 			  "up peer");
-		ASSERT_OK(SYS_NOFAIL("ip netns exec foo ip addr add dev %s 10.0.0.2/24", netkit_peer),
+		ASSERT_OK(SYS_NOFAIL("ip netns exec %s ip addr add dev %s 10.0.0.2/24", ns_name, netkit_peer),
 			  "addr peer");
 	}
 	return err;
@@ -110,16 +113,22 @@ static int create_netkit(int mode, int policy, int peer_policy, int *ifindex,
 
 static void move_netkit(void)
 {
-	ASSERT_OK(SYS_NOFAIL("ip link set %s netns foo", netkit_peer), "move peer");
-	ASSERT_OK(SYS_NOFAIL("ip netns exec foo ip link set dev %s up", netkit_peer), "up peer");
-	ASSERT_OK(SYS_NOFAIL("ip netns exec foo ip addr add dev %s 10.0.0.2/24", netkit_peer),
+	char ns_name[32] = NS_NAME;
+	ASSERT_OK(append_tid(ns_name, strlen(ns_name)), "build ns-name");
+
+	ASSERT_OK(SYS_NOFAIL("ip link set %s netns %s", netkit_peer, ns_name), "move peer");
+	ASSERT_OK(SYS_NOFAIL("ip netns exec %s ip link set dev %s up", ns_name, netkit_peer), "up peer");
+	ASSERT_OK(SYS_NOFAIL("ip netns exec %s ip addr add dev %s 10.0.0.2/24", ns_name, netkit_peer),
 		  "addr peer");
 }
 
 static void destroy_netkit(void)
 {
+	char ns_name[32] = NS_NAME;
+	ASSERT_OK(append_tid(ns_name, strlen(ns_name)), "build ns-name");
+
 	ASSERT_OK(SYS_NOFAIL("ip link del dev %s", netkit_name), "del primary");
-	ASSERT_OK(SYS_NOFAIL("ip netns del foo"), "delete netns");
+	ASSERT_OK(SYS_NOFAIL("ip netns del %s", ns_name), "delete netns");
 	ASSERT_EQ(if_nametoindex(netkit_name), 0, netkit_name "_ifindex");
 }
 
