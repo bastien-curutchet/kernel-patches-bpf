@@ -185,7 +185,7 @@ static int send_icmp(void)
 	return __send_icmp(ping_addr_neigh);
 }
 
-void serial_test_tc_netkit_basic(void)
+void test_tc_netkit_basic(void)
 {
 	LIBBPF_OPTS(bpf_prog_query_opts, optq);
 	LIBBPF_OPTS(bpf_netkit_opts, optl);
@@ -421,7 +421,7 @@ cleanup:
 	destroy_netkit();
 }
 
-void serial_test_tc_netkit_multi_links(void)
+void test_tc_netkit_multi_links(void)
 {
 	serial_test_tc_netkit_multi_links_target(NETKIT_L2, BPF_NETKIT_PRIMARY);
 	serial_test_tc_netkit_multi_links_target(NETKIT_L3, BPF_NETKIT_PRIMARY);
@@ -536,7 +536,7 @@ cleanup:
 	destroy_netkit();
 }
 
-void serial_test_tc_netkit_multi_opts(void)
+void test_tc_netkit_multi_opts(void)
 {
 	serial_test_tc_netkit_multi_opts_target(NETKIT_L2, BPF_NETKIT_PRIMARY);
 	serial_test_tc_netkit_multi_opts_target(NETKIT_L3, BPF_NETKIT_PRIMARY);
@@ -544,7 +544,7 @@ void serial_test_tc_netkit_multi_opts(void)
 	serial_test_tc_netkit_multi_opts_target(NETKIT_L3, BPF_NETKIT_PEER);
 }
 
-void serial_test_tc_netkit_device(void)
+void test_tc_netkit_device(void)
 {
 	LIBBPF_OPTS(bpf_prog_query_opts, optq);
 	LIBBPF_OPTS(bpf_netkit_opts, optl);
@@ -730,7 +730,7 @@ cleanup:
 	destroy_netkit();
 }
 
-void serial_test_tc_netkit_neigh_links(void)
+void test_tc_netkit_neigh_links(void)
 {
 	serial_test_tc_netkit_neigh_links_target(NETKIT_L2, BPF_NETKIT_PRIMARY);
 	serial_test_tc_netkit_neigh_links_target(NETKIT_L3, BPF_NETKIT_PRIMARY);
@@ -805,7 +805,7 @@ cleanup:
 	destroy_netkit();
 }
 
-void serial_test_tc_netkit_pkt_type(void)
+void test_tc_netkit_pkt_type(void)
 {
 	serial_test_tc_netkit_pkt_type_mode(NETKIT_L2);
 	serial_test_tc_netkit_pkt_type_mode(NETKIT_L3);
@@ -865,7 +865,7 @@ cleanup:
 	destroy_netkit();
 }
 
-void serial_test_tc_netkit_scrub(void)
+void test_tc_netkit_scrub(void)
 {
 	serial_test_tc_netkit_scrub_type(NETKIT_SCRUB_DEFAULT, false);
 	serial_test_tc_netkit_scrub_type(NETKIT_SCRUB_NONE, true);
