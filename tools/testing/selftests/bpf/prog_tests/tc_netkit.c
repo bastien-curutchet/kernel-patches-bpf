@@ -82,51 +82,44 @@ static int create_netkit(int mode, int policy, int peer_policy, int *ifindex,
 	*ifindex = if_nametoindex(netkit_name);
 
 	ASSERT_GT(*ifindex, 0, "retrieve_ifindex");
-	ASSERT_OK(system("ip netns add foo"), "create netns");
-	ASSERT_OK(system("ip link set dev " netkit_name " up"),
+	ASSERT_OK(SYS_NOFAIL("ip netns add foo"), "create netns");
+	ASSERT_OK(SYS_NOFAIL("ip link set dev " netkit_name " up"),
 			 "up primary");
-	ASSERT_OK(system("ip addr add dev " netkit_name " 10.0.0.1/24"),
+	ASSERT_OK(SYS_NOFAIL("ip addr add dev " netkit_name " 10.0.0.1/24"),
 			 "addr primary");
 
 	if (mode == NETKIT_L3) {
-		ASSERT_EQ(system("ip link set dev " netkit_name
-				 " addr ee:ff:bb:cc:aa:dd 2> /dev/null"), 512,
-				 "set hwaddress");
+		ASSERT_EQ(SYS_NOFAIL("ip link set dev %s addr ee:ff:bb:cc:aa:dd 2> /dev/null", netkit_name),
+			  512, "set hwaddress");
 	} else {
-		ASSERT_OK(system("ip link set dev " netkit_name
-				 " addr ee:ff:bb:cc:aa:dd"),
-				 "set hwaddress");
+		ASSERT_OK(SYS_NOFAIL("ip link set dev %s addr ee:ff:bb:cc:aa:dd", netkit_name),
+			  "set hwaddress");
 	}
 	if (flags & FLAG_SAME_NETNS) {
-		ASSERT_OK(system("ip link set dev " netkit_peer " up"),
-				 "up peer");
-		ASSERT_OK(system("ip addr add dev " netkit_peer " 10.0.0.2/24"),
-				 "addr peer");
+		ASSERT_OK(SYS_NOFAIL("ip link set dev %s up", netkit_peer), "up peer");
+		ASSERT_OK(SYS_NOFAIL("ip addr add dev %s 10.0.0.2/24", netkit_peer), "addr peer");
 	} else {
-		ASSERT_OK(system("ip link set " netkit_peer " netns foo"),
-				 "move peer");
-		ASSERT_OK(system("ip netns exec foo ip link set dev "
-				 netkit_peer " up"), "up peer");
-		ASSERT_OK(system("ip netns exec foo ip addr add dev "
-				 netkit_peer " 10.0.0.2/24"), "addr peer");
+		ASSERT_OK(SYS_NOFAIL("ip link set %s netns foo", netkit_peer), "move peer");
+		ASSERT_OK(SYS_NOFAIL("ip netns exec foo ip link set dev %s up", netkit_peer),
+			  "up peer");
+		ASSERT_OK(SYS_NOFAIL("ip netns exec foo ip addr add dev %s 10.0.0.2/24", netkit_peer),
+			  "addr peer");
 	}
 	return err;
 }
 
 static void move_netkit(void)
 {
-	ASSERT_OK(system("ip link set " netkit_peer " netns foo"),
-			 "move peer");
-	ASSERT_OK(system("ip netns exec foo ip link set dev "
-			 netkit_peer " up"), "up peer");
-	ASSERT_OK(system("ip netns exec foo ip addr add dev "
-			 netkit_peer " 10.0.0.2/24"), "addr peer");
+	ASSERT_OK(SYS_NOFAIL("ip link set %s netns foo", netkit_peer), "move peer");
+	ASSERT_OK(SYS_NOFAIL("ip netns exec foo ip link set dev %s up", netkit_peer), "up peer");
+	ASSERT_OK(SYS_NOFAIL("ip netns exec foo ip addr add dev %s 10.0.0.2/24", netkit_peer),
+		  "addr peer");
 }
 
 static void destroy_netkit(void)
 {
-	ASSERT_OK(system("ip link del dev " netkit_name), "del primary");
-	ASSERT_OK(system("ip netns del foo"), "delete netns");
+	ASSERT_OK(SYS_NOFAIL("ip link del dev %s", netkit_name), "del primary");
+	ASSERT_OK(SYS_NOFAIL("ip netns del foo"), "delete netns");
 	ASSERT_EQ(if_nametoindex(netkit_name), 0, netkit_name "_ifindex");
 }
 
