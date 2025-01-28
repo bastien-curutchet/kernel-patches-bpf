@@ -3,6 +3,7 @@
 #ifndef TC_HELPERS
 #define TC_HELPERS
 #include <test_progs.h>
+#include "network_helpers.h"
 
 #ifndef loopback
 # define loopback 1
@@ -73,6 +74,29 @@ static inline void assert_mprog_count_ifindex(int ifindex, int target, int expec
 static inline void tc_skel_reset_all_seen(struct test_tc_link *skel)
 {
 	memset(skel->bss, 0, sizeof(*skel->bss));
+}
+
+static inline struct netns_obj *create_tid_ns(const char * ns_name)
+{
+	struct netns_obj *ns;
+	char name[32];
+	
+	if (!ASSERT_OK_PTR(ns_name, "check ns name ptr"))
+		return NULL;
+
+	memcpy(name, ns_name, sizeof(name));
+
+	/* append_tid() needs 8 characters to append the thread ID */
+	if (!ASSERT_OK(strlen(name) + 8 > sizeof(name), "check ns name size"))
+		return NULL;
+
+	if (!ASSERT_OK(append_tid(name, strlen(name)), "append TID to ns name"))
+		return NULL;
+
+	ns = netns_new(name, true);
+	ASSERT_OK_PTR(ns, "netns new");
+
+	return ns;
 }
 
 #endif /* TC_HELPERS */
